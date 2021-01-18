@@ -1,5 +1,6 @@
 import 'package:app_github/api/api.dart';
 import 'package:app_github/components/card_repository.dart';
+import 'package:app_github/components/form_repository.dart';
 import 'package:app_github/models/repository.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +10,15 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  var _api = ApiService();
+  ApiService _api;
+  Repository repository;
+
+  @override
+  void initState() {
+    _api = ApiService();
+    repository = Repository();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,27 +27,35 @@ class _HomeState extends State<Home> {
         title: Text('API GITHUB'),
       ),
       body: Container(
-        child: FutureBuilder(
-            future: _api.searchRepository(),
-            builder: (context, snapshot) {
-              switch(snapshot.connectionState){
-                case ConnectionState.none :
-                case ConnectionState.waiting:
-                  return Center(child: Text("Carregando..."));
-                default:
-                  if(snapshot.hasError){
-                    return Center(child: Text("Erro ao carregar..."));
-                  } else {
-                    return ListView.builder(
-                      itemCount: _api.repositories.length,
-                      itemBuilder: (context, index){
-                        return Center(child: Text('${_api.repositories.toList()}'),);
-                    });
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            FormRepository(
+              onSearch: _api.searchRepository,
+            ),
+            SizedBox(height: 20),
+            FutureBuilder(
+                future: _api.searchRepository('dart'),
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.none:
+                    case ConnectionState.waiting:
+                      return Center(child: Text("Carregando..."));
+                    default:
+                      if (snapshot.hasError) {
+                        return Center(child: Text("Erro ao carregar..."));
+                      } else {
+                        return Expanded(
+                          child: Container(
+                              child: CardRepository(
+                                  repositories: _api.repositories)),
+                        );
+                      }
                   }
-              }
-            }),
+                }),
+          ],
+        ),
       ),
-
     );
   }
 }
